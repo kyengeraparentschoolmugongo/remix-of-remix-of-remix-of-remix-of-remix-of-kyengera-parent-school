@@ -1,9 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LibraryShell } from '@/components/library-shell';
+const routerMock = vi.hoisted(() => ({ navigate: vi.fn(), history: { back: vi.fn() } }));
 
 const location = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('@tanstack/react-router', () => ({
+  useRouter: () => routerMock,
+  Link: ({ to, children, ...props }: { to: string; children?: unknown } & Record<string, unknown>) => <a href={to} {...props}>{children as never}</a>,
   useLocation: ({ select }: { select: (value: typeof location) => string }) => select(location),
 }));
 
