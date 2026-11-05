@@ -132,3 +132,22 @@ describe('Shared class navigation', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 });
+describe('In-app page links', () => {
+  it('routes captured page links without reloading and maps /index.html to home', () => {
+    routerMock.navigate.mockClear();
+    render(<LibraryShell><a href="/p1.html">P1</a><a href="/index.html">Home page</a></LibraryShell>);
+    expect(fireEvent.click(screen.getByText('P1'))).toBe(false);
+    expect(routerMock.navigate).toHaveBeenLastCalledWith({ href: '/p1.html' });
+    fireEvent.click(screen.getByText('Home page'));
+    expect(routerMock.navigate).toHaveBeenLastCalledWith({ href: '/' });
+  });
+  it('sends Return links back through app history when there is any', () => {
+    routerMock.history.back.mockClear(); routerMock.navigate.mockClear();
+    window.history.replaceState({ __TSR_index: 2 }, '');
+    render(<LibraryShell><a href="/index.html">Return to Homepage</a></LibraryShell>);
+    fireEvent.click(screen.getByText('Return to Homepage'));
+    expect(routerMock.history.back).toHaveBeenCalledTimes(1);
+    expect(routerMock.navigate).not.toHaveBeenCalled();
+    window.history.replaceState(null, '');
+  });
+});
