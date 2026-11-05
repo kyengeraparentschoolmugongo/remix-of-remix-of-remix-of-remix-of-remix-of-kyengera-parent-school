@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from '@tanstack/react-router';
+import { useLocation, useRouter } from '@tanstack/react-router';
 import menu from '@/data/navigation/menu.json';
 import { AppBar } from '@/components/navigation/app-bar';
 import { SideDrawer } from '@/components/navigation/side-drawer';
