@@ -23,6 +23,13 @@ export function Index() {
   const [doorOpen, setDoorOpen] = useState(false);
   const [doorSettled, setDoorSettled] = useState(false);
   useEffect(() => {
+    // The door shows once per app session; returning to the home page shows the shelves.
+    try { if (sessionStorage.getItem('library-door-open') === '1') { setDoorOpen(true); setDoorSettled(true); } } catch { /* storage unavailable */ }
+  }, []);
+  useEffect(() => {
+    if (doorOpen) { try { sessionStorage.setItem('library-door-open', '1'); } catch { /* storage unavailable */ } }
+  }, [doorOpen]);
+  useEffect(() => {
     if (!doorOpen) return;
     const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 2000;
     const timer = window.setTimeout(() => setDoorSettled(true), delay);
