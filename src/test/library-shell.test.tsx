@@ -1,9 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LibraryShell } from '@/components/library-shell';
+const routerMock = vi.hoisted(() => ({ navigate: vi.fn(), history: { back: vi.fn() } }));
 
 const location = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('@tanstack/react-router', () => ({
+  useRouter: () => routerMock,
+  Link: ({ to, children, ...props }: { to: string; children?: unknown } & Record<string, unknown>) => <a href={to} {...props}>{children as never}</a>,
   useLocation: ({ select }: { select: (value: typeof location) => string }) => select(location),
 }));
 
@@ -127,5 +130,24 @@ describe('Shared class navigation', () => {
     location.pathname = '/PrimaryFiveEnglishLessonNotes.html';
     view.rerender(<LibraryShell>Page two</LibraryShell>);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+describe('In-app page links', () => {
+  it('routes captured page links without reloading and maps /index.html to home', () => {
+    routerMock.navigate.mockClear();
+    render(<LibraryShell><a href="/p1.html">P1</a><a href="/index.html">Home page</a></LibraryShell>);
+    expect(fireEvent.click(screen.getByText('P1'))).toBe(false);
+    expect(routerMock.navigate).toHaveBeenLastCalledWith({ href: '/p1.html' });
+    fireEvent.click(screen.getByText('Home page'));
+    expect(routerMock.navigate).toHaveBeenLastCalledWith({ href: '/' });
+  });
+  it('sends Return links back through app history when there is any', () => {
+    routerMock.history.back.mockClear(); routerMock.navigate.mockClear();
+    window.history.replaceState({ __TSR_index: 2 }, '');
+    render(<LibraryShell><a href="/index.html">Return to Homepage</a></LibraryShell>);
+    fireEvent.click(screen.getByText('Return to Homepage'));
+    expect(routerMock.history.back).toHaveBeenCalledTimes(1);
+    expect(routerMock.navigate).not.toHaveBeenCalled();
+    window.history.replaceState(null, '');
   });
 });

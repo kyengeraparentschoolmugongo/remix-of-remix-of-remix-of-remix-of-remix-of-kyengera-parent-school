@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from '@tanstack/react-router';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useLocation, useRouter } from '@tanstack/react-router';
 import menu from '@/data/navigation/menu.json';
 import { AppBar } from '@/components/navigation/app-bar';
 import { SideDrawer } from '@/components/navigation/side-drawer';
@@ -46,6 +46,23 @@ export function LibraryShell({ children }: { children: ReactNode }) {
     document.addEventListener('keydown', escape);
     return () => document.removeEventListener('keydown', escape);
   }, [mobileOpen, closeMobileAndFocus]);
+  const router = useRouter();
+  // Captured page links route in-app instead of reloading; "Return/Back" links go back through app history when there is any.
+  const interceptLinks = useCallback((event: MouseEvent<HTMLElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const anchor = (event.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+    const url = new URL(anchor.href, window.location.href);
+    if (url.origin !== window.location.origin) return;
+    if (url.pathname === window.location.pathname && url.hash) return;
+    if (/\.[a-z0-9]+$/i.test(url.pathname) && !/\.html?$/i.test(url.pathname)) return;
+    event.preventDefault();
+    const label = anchor.textContent ?? '';
+    const historyIndex = (window.history.state as { __TSR_index?: number } | null)?.__TSR_index ?? 0;
+    if (/\b(return|back)\b/i.test(label) && historyIndex > 0) { router.history.back(); return; }
+    const path = url.pathname === '/index.html' ? '/' : url.pathname;
+    void router.navigate({ href: path + url.search + url.hash });
+  }, [router]);
   const toggle = useCallback(() => {
     setProfileOpen(false);
     if (window.matchMedia('(max-width: 767px)').matches) setMobileOpen(value => !value);
@@ -54,6 +71,6 @@ export function LibraryShell({ children }: { children: ReactNode }) {
   return <div className={`library-shell ${mobileOpen ? 'library-mobile-open' : ''} ${desktopClosed ? 'library-desktop-closed' : ''}`}>
     <AppBar triggerRef={trigger} menuExpanded={isMobile ? mobileOpen : !desktopClosed} profileOpen={profileOpen} onToggleMenu={toggle} onToggleProfile={toggleProfile} onCloseProfile={closeProfile} />
     <SideDrawer mobileOpen={mobileOpen} pathname={pathname} openPath={openPath} onClose={closeMobile} onCloseAndFocus={closeMobileAndFocus} onToggleBranch={toggleBranch} onNavigate={navigate} />
-    <main className="library-content">{children}</main>
+    <main className="library-content" onClick={interceptLinks}>{children}</main>
   </div>;
 }
