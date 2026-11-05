@@ -10,6 +10,38 @@ vi.mock('@tanstack/react-router', () => ({
 afterEach(() => { cleanup(); vi.restoreAllMocks(); location.pathname = '/'; });
 
 describe('Shared class navigation', () => {
+  it('toggles the contact card and dismisses it outside or with its close control', () => {
+    render(<LibraryShell>Page content</LibraryShell>);
+    const contact = screen.getByRole('button', { name: "Admin's contact" });
+    fireEvent.click(contact);
+    expect(screen.getByRole('dialog', { name: "Admin's contact" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close contact card' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(contact);
+    fireEvent.click(screen.getByText('Page content'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(contact);
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle class menu' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('dismisses the phone drawer from its backdrop or close control', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation(query => ({
+      matches: true, media: query, onchange: null,
+      addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn(),
+    }));
+    render(<LibraryShell>Page content</LibraryShell>);
+    const toggle = screen.getByRole('button', { name: 'Toggle class menu' });
+    fireEvent.click(toggle);
+    fireEvent.click(document.querySelector('.library-menu-backdrop') as HTMLElement);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    fireEvent.click(document.querySelector('.library-mobile-close') as HTMLElement);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveFocus();
+  });
+
   it('closes the previous section on the first click of another section', () => {
     render(<LibraryShell>Page content</LibraryShell>);
     const nursery = screen.getByRole('button', { name: 'Nursery Section' });
