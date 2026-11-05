@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useRouter } from '@tanstack/react-router';
 import menu from '@/data/navigation/menu.json';
 import { AppBar } from '@/components/navigation/app-bar';
