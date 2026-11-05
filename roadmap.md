@@ -8,3 +8,5 @@
 - [x] Move document search guidance inside the search bar and remove subjects beneath the count.
 - [x] Consolidate Type, Size, and Order into a cascading Sort by menu.
 - [x] Verify filtering, search, and menu behavior on phone and desktop.
+- [ ] Extract reusable top bar, contact card, side drawer, and memoized navigation tree without changing appearance or behavior.
+- [ ] Verify navigation and contact controls on desktop and phone sizes.
